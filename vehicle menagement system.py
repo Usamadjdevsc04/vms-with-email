@@ -1,292 +1,377 @@
-import csv
-from prettytable import PrettyTable
+import sqlite3
+import sys
+from datetime import datetime
 from tabulate import tabulate
 
 
-class vehicle_inventory:
-    all = []
-
-    def __init__(self, type_car, make, name, model, variant, mileage, engine_type, cc, colour, rating,
-                 registration, registered_city, chassis_no: str, price, purchasing_date, selling_date, purchasing_price,
-                 selling_price, profit_loss):
-        self.type_car = type_car
-        self.make = make
-        self.name = name
-        self.model = model
-        self.variant = variant
-        self.mileage = mileage
-        self.colour = colour
-        self.engine_type = engine_type
-        self.cc = cc
-        self.rating = rating
-        self.registration = registration
-        self.registration_city = registered_city
-        self.chassis_no = chassis_no
-        self.price = price
-        self.purchasing_date = purchasing_date
-        self.selling_date = selling_date
-        self.purchasing_price = purchasing_price
-        self.selling_price = selling_price
-        self.profit_loss = profit_loss
-        vehicle_inventory.all.append(self)
+class inventory:
 
     @classmethod
-    def instantiate_from_csv(cls):
-        table = PrettyTable(
-            ["type_car", "name", "make", "model", "variant", "mileage", "colour", "engine_type", " cc", "rating",
-             "registration", "registration_city", "chassis_no", "price", "selling_date",
-             "purchasing_date",
-             "purchasing_price", "selling_price", "profit_loss"])
-        with open('inventory.csv', 'a', newline="") as csvfile:
-            fieldnames = ["type_car", "name", "make", "model", "variant", "mileage", "colour", "engine_type", "cc",
-                          "rating",
-                          "registration", "registration_city", "chassis_no", "price", "selling_date", "purchasing_date",
-                          "purchasing_price", "selling_price", "profit_loss"]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            # writer.writeheader()
+    def available_cars(cls, mail):
+        data = ''
 
-            while True:
-                type_car = ''
-                name = ''
-                make = ''
-                model = ''
-                variant = ''
-                mileage = ''
-                engine_type = ''
-                cc = ''
-                colour = ''
-                rating = ''
-                registration_city = ''
-                registration = ''
-                chassis_no = ''
-                price = ''
-                purchasing_date = ''
-                selling_date = ''
-                purchasing_price = ''
-                selling_price = ''
-                profit_loss = ''
-                option = ''
-                try:
-                    option = int(input(
-                        "YOu want to Add Vehicle or delete record of the vehicle\nPress 1 for Adding vehicle record\nPress 2 for Deleting vehicle record\nPress 3 to show complete inventory\nENTER: "))
-                except:
-                    print("Only numbers can be used ***INTEGERS**")
-                    cls.instantiate_from_csv()
-                if option == 1:
-                    print(
-                        "WELCOME TO ELITE MOTORS\nYou CAN ADD VEHICLES DETAILS IN ELITE MOTORS PORTAL \nCategories\n1.car\n2.jeep\n3.pickup")
-                    type_car = ""
-                    try:
-                        type_car = int(input("please enter the type of the car: "))
-                    except:
-                        print("Enter only numbers **INTEGERS**")
-                        cls.instantiate_from_csv()
-                    if type_car == 1:
-                        name = input("Enter name of the car: ")
-                    elif type_car == 2:
-                        name = input("Enter name of the jeep: ")
-                    elif type_car == 3:
-                        name = input("Enter name of the pickup: ")
-                    else:
-                        print("Wrong number added")
-                        cls.instantiate_from_csv()
-                    make = input("please enter the make of the car : ")
-                    model = input('Please enter the model of the car: ')
-                    variant = input('Please enter the variant of the car: ')
-                    mileage = input('Please enter the mileage of the car: ')
-                    engine_type = input('Please enter the engine_type of the car: ')
-                    cc = input("Please enter the engine capacity: ")
-                    colour = input('Please enter the colour of  the car: ')
-                    rating = input("please enter the rating of the car: ")
-                    registration_city = input("please enter the registration city: ")
-                    registration = input("please enter the registration: ")
+        data = input(
+            "You can search cars options below:\n\t1.ALL CARS: \n\t2.ADD cars: \n\t3.Update record: \n\t4.Delete "
+            "record: \nEnter:")
+        if data == "1":
+            cls.show_data()
+        elif data == "2":
+            cls.add_data(mail)
+        elif data == "3":
+            cls.update_price()
+        elif data == "4":
+            cls.del_data()
+        else:
+            print("Wrong input only integers value can be inserted from 1 to 4")
+            cls.available_cars(mail)
 
-                    if registration == "" and registration_city == "":
-                        print("Not REGISTERED please enter the chassis_no: ")
-                        chassis_no = input("ENtER chassis no")
+    @classmethod
+    def add_data(cls, mail):
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS cars (car_id INTEGER PRIMARY KEY, name TEXT NOT NULL,make TEXT,
+        model TEXT,variant TEXT,cc TEXT, engine_type TEXT,registration_city TEXT,registration TEXT,price TEXT,
+        purchasing_date TEXT, selling_date TEXT,purchasing_price FLOAT,selling_price FLOAT,profit_loss FLOAT)''')
 
-                    price = input("please enter the price: ")
-                    purchasing_date = input('Please enter the purchasing_date of the vehicle: ')
-                    selling_date = input('Please enter the selling date of the vehicle: ')
-                    purchasing_price = input('Please enter the purchasing price of the vehicle : ')
-                    selling_price = input("please enter the selling price of the vehicle: ")
-                    profit_loss = float(selling_price) - float(purchasing_price)
-                    if selling_price > purchasing_price:
-                        print("profit", profit_loss)
-                    elif purchasing_price > selling_price:
-                        print("loss", profit_loss)
-                    else:
-                        print("no profit no loss")
-                elif option == 2:
-                    file = open("inventory.csv", "r")
-                    reader = csv.reader(file)
-                    l = []
-                    uroll = input("enter the registration of the vehicle to delete : ")
-                    found = False
-                    for row in reader:
-                        if row[11] == str(uroll):
-                            found = True
-                        else:
-                            l.append(row)
-
-                    file.close()
-                    if not found:
-                        print("vehicle not found")
-                    else:
-                        file = open("inventory.csv", "w+", newline="")
-                        writer = csv.writer(file)
-                        writer.writerows(l)
-                        file.seek(0)
-                        reader = csv.reader(file)
-                        file.close()
-
-                    with open("inventory.csv") as f:
-                        reader = csv.reader(f)
-                        header = next(reader)
-                        table.fieldnames = fieldnames
-                        for row in reader:
-                            table.add_row(row)
-                    print(table)
-                elif option == 3:
-                    with open('inventory.csv', 'r') as f:
-                        reader = csv.reader(f)
-                        print(tabulate(reader))
-                else:
-                    print("wrong number added")
-                    cls.instantiate_from_csv()
-
-                writer.writerow(
-                    {"type_car": type_car, "name": name, "make": make, "model": model, "variant": variant,
-                     "mileage": mileage,
-                     "colour": colour,
-                     "engine_type": engine_type, "cc": cc, "rating": rating, "registration": registration,
-                     "registration_city": registration_city, "chassis_no": chassis_no, "price": price,
-                     "purchasing_date": purchasing_date, "selling_date": selling_date,
-                     "purchasing_price": purchasing_price,
-                     "selling_price": selling_price, "profit_loss": profit_loss})
+        car_id = True
+        while car_id:
+            car_id = int(input("Enter the car_id: "))
+            if inventory.chk_data(car_id):
+                print("CAR ID already exists. Try with another id\n")
+                cls.add_data(mail)
+            else:
+                pass
+            name = input("Enter a name of the car : ")
+            make = input("Enter make of the car: ")
+            model = input("Enter model of the car: ")
+            variant = input("Enter variant of the car : ")
+            cc = input("Enter the cc of the car: ")
+            engine_type = input("Enter the engine_type of the car: ")
+            registration_city = input("Enter the registration city of the car: ")
+            registration = input("Enter the registration number of the car : ")
+            price = input("Enter the price: ")
+            purchasing_date = input("Enter the purchasing date of the car: ")
+            selling_date = input("Enter the selling date of the car: ")
+            purchasing_price = float(input("Enter the purchasing price of the car:"))
+            selling_price = float(input("Enter the selling price of the car: "))
+            profit_loss = float(selling_price) - float(purchasing_price)
+            if selling_price > purchasing_price:
+                print("profit", profit_loss)
+            elif purchasing_price > selling_price:
+                print("loss", profit_loss)
+            else:
+                print("no profit no loss")
+                break
+            cursor.execute("INSERT INTO cars (car_id, name,make,model,variant,cc,engine_type,"
+                           "registration_city,registration,price,purchasing_date,selling_date,purchasing_price,"
+                           "selling_price,profit_loss) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                           (car_id, name, make, model, variant, cc, engine_type, registration_city, registration,
+                            price, purchasing_date, selling_date, purchasing_price, selling_price, profit_loss))
+            conn.commit()
+            conn.close()
+            want = input("\nDo you want to add more cars Y/N ? ")
+            if want == "y" or want == "Y":
+                cls.add_data(mail)
+            else:
+                print("ThankYOU")
                 break
 
-
-class elite_motors_buyer(vehicle_inventory):
-
-    def __init__(self, type_car, name, make, model, cc, engine_type, variant, mileage, colour, rating,
-                 registration_city, price):
-        self.type_car = type_car
-        self.name = name
-        self.make = make
-        self.model = model
-        self.cc = cc
-        self.engine_type = engine_type
-        self.variant = variant
-        self.mileage = mileage
-        self.colour = colour
-        self.rating = rating
-        self.registration_city = registration_city
-        self.price = price
-
-        elite_motors_buyer.all.append(self)
+    @classmethod
+    def show_data(cls):
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM cars")
+        cars = cursor.fetchall()
+        column_names = [i[0] for i in cursor.description]
+        print(tabulate(cars, headers=column_names, tablefmt='fancy_grid', colalign=("left",)))
+        conn.close()
 
     @classmethod
-    def instantiate_from_csv(cls):
+    def show_data_buyer(cls):
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT name,make, model,variant,cc,engine_type,registration_city,registration, price FROM cars")
+        cars = cursor.fetchall()
+        column_names = ['name', 'make', 'model', 'variant', 'cc', 'engine_type', 'registration_city', 'registration',
+                        'price']
+        print(tabulate(cars, headers=column_names, tablefmt='fancy_grid', colalign=("left",)))
+        conn.close()
 
-        table = PrettyTable(
-            ["name", "make", "model", "variant", "cc", "mileage", "colour", "engine_type", "rating", "registration_city"
-                , "price"])
-        print("WELCOME TO ELITE MOTORS\nYOU WANT TO BUY WHICH VEHICLE: ")
+    @classmethod
+    def search_by_name(cls):
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
 
-        def searchbyname():
-            all_: list = []
-            headers = ["VEHICLE", "DETAILS"]
-            name_car = str(input("Enter the name of the car you are interested in : "))
-            with open('inventory.csv', 'r') as file:
-                reader = csv.reader(file)
-                csv.reader = reader
-                for row in csv.reader:
-                    if row[1] == name_car:
-                        all_.append(row)
-                        x = [["name", name_car], ["make", row[2]], ["model", row[3]], ["variant", row[4]],
-                             ["mileage", row[5]], ["colour", row[6]], ["engine_type", row[7]], ["cc", row[8]],
-                             ["rating", row[9]],
-                             ["registration_city", row[11]], ["price", row[13]]]
-                        print(tabulate(x, headers=headers))
+        name = input("Enter name of the car:")
+        query = cursor.execute(
+            "SELECT name, make, model, variant, cc, engine_type, registration_city, registration, price FROM cars "
+            "WHERE name=?",
+            (name,))
+        car = cursor.fetchone()
 
-        def searchbymake():
-            all_: list = []
-            headers = ["VEHICLE", "DETAILS"]
-            make_car = input("Enter the brand of the car you are interested in : ")
-            with open('inventory.csv', 'r') as file:
-                reader = csv.reader(file)
-                csv.reader = reader
-                for row in csv.reader:
-                    if row[2] == make_car:
-                        all_.append(row)
-                        x = [["name", row[1]], ["make", make_car], ["model", row[3]], ["variant", row[4]],
-                             ["mileage", row[5]], ["colour", row[6]], ["engine_type", row[7]], ["cc", row[8]],
-                             ["rating", row[9]],
-                             ["registration_city", row[11]], ["price", row[13]]]
-                        print(tabulate(x, headers=headers))
-
-        def searchbyregisterationcity():
-            all_: list = []
-            headers = ["VEHICLE", "DETAILS"]
-            name_registration_city = input("Enter the registration city of the car: ")
-            with open('inventory.csv', 'r') as file:
-                reader = csv.reader(file)
-                csv.reader = reader
-                for row in csv.reader:
-                    if row[11] == name_registration_city:
-                        all_.append(row)
-                        x = [["name", row[1]], ["make", row[2]], ["model", row[3]], ["variant", row[4]],
-                             ["mileage", row[5]], ["colour", row[6]], ["engine_type", row[7]], ["cc", row[8]],
-                             ["rating", row[9]],
-                             ["registration_city", name_registration_city], ["price", row[13]]]
-                        print(tabulate(x, headers=headers))
-
-        print("Enter 1 to search by vehicle name: ")
-        print("Enter 2 to search by vehicle brand :")
-        print("Enter 3 to search by vehicle Registration_city")
-        src = ''
-        try:
-            src = int(input("Enter : "))
-        except:
-            print("Only numbers can be used **INTEGERS**")
-            cls.instantiate_from_csv()
-        if src == 1:
-            searchbyname()
-        elif src == 2:
-            searchbymake()
-        elif src == 3:
-            searchbyregisterationcity()
+        column_names = ['name', 'make', 'model', 'variant', 'cc', 'engine_type', 'registration_city', 'registration',
+                        'price']
+        if car:
+            print(tabulate([car], headers=column_names, tablefmt='fancy_grid', colalign=("left",)))
         else:
-            print("wrong number")
-            cls.instantiate_from_csv()
+            print("No cars found with this name '{}'".format(name))
+        conn.close()
+        if inventory.chk_data(name):
+            pass
+        else:
+            cls.search_by_name()
 
-    def load_data(elitemotors_buyer):
-        mylist = []
-        with open("inventory.csv") as numbers:
-            numbers_data = csv.reader(numbers, delimiter=",")
-            next(numbers_data)
-            for row in numbers_data:
-                mylist.append(row)
-            return mylist
+    @classmethod
+    def search_by_registration_city(cls):
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        registration_city = input("Enter registration_city of the car:")
+        cursor.execute(
+            "SELECT name, make, model, variant, cc, engine_type, registration_city, registration, price FROM cars "
+            "WHERE registration_city=?",
+            (registration_city,))
+        cars = cursor.fetchall()
 
+        column_names = ['name', 'make', 'model', 'variant', 'cc', 'engine_type', 'registration_city', 'registration',
+                        'price']
+        if cars:
+            print(tabulate(cars, headers=column_names, tablefmt='fancy_grid', colalign=("left",)))
+        else:
+            print("No cars found with registration city '{}'".format(registration_city))
+
+        conn.close()
+        if inventory.chk_data(registration_city):
+            pass
+        else:
+            cls.search_by_registration_city()
+
+    @classmethod
+    def del_data(cls):
+        cls.show_data()
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        query = "DELETE FROM cars WHERE car_id =?"
+        car_id = input("Enter the CAR ID to delete record: ")
+        if inventory.chk_data(car_id):
+            pass
+        else:
+            print("NO record found")
+            cls.del_data()
+        cursor.execute(query, (car_id,))
+        conn.commit()
+        conn.close()
+
+    @classmethod
+    def update_price(cls):
+        cls.show_data()
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        query = "UPDATE cars SET price=? WHERE car_id=?"
+        car_id = input("Enter Car Id :")
+        if inventory.chk_data(car_id):
+            u = input("Enter new updated price: ")
+            cursor.execute(query, (u, car_id))
+        else:
+            print("CAR ID not found")
+            cls.update_price()
+        conn.commit()
+        cls.show_data()
+        conn.close()
+
+    @classmethod
+    def chk_data(cls, car_id):
+        conn = sqlite3.connect('inventory.db')
+        c = conn.cursor()
+        c.execute("SELECT * FROM cars WHERE car_id=?", (car_id,))
+        result = c.fetchone()
+        conn.close()
+        if result is None:
+            return False
+        else:
+            return True
+
+class Buyer(inventory):
+    def __init__(self, name):
+        self.name = name
+
+    @classmethod
+    def buy(cls, mail):
+        user_input = ''
+        user_input = int(input("-----------Welcome to ELITE MOTORS------------ \n"
+                               "Are you a buyer or a owner? \n\t"
+                               "1. Buyer\n\t"
+                               "2. Owner\n\t"
+                               "Please enter:  "))
+        if user_input == 1:
+            return Customer.choice(mail)
+        elif user_input == 2:
+            return Buyer.owner(mail)
+        else:
+            print("error")
+            cls.buy(mail)
+
+    @classmethod
+    def owner(cls, mail):
+        print("Welcome owner!")
+        inventory.available_cars(mail)
+
+
+class Customer(inventory):
+    def __init__(self, name, mail):
+        self.name = name
+        self.mail = mail
+
+    @classmethod
+    def choice(cls, mail):
+        while True:
+            data1 = ''
+            data1 = input("We have the following cars\n\t1.ALL CARS\n\t2.Search by name\n\t3.Search by "
+                          "registration_city\n\t4.MainMenu\n\tENTER:")
+            if data1 == "1":
+                return inventory.show_data_buyer()
+            elif data1 == "2":
+                return inventory.search_by_name()
+            elif data1 == "3":
+                return inventory.search_by_registration_city()
+            elif data1 == "4":
+                Buyer.buy(mail)
+            else:
+                print("Only integers values can be inserted from 1 to 4")
+                cls.choice(mail)
+                break
+
+    @classmethod
+    def sell_car(cls, mail):
+        car_id = input("Enter the Car Id:")
+        if inventory.chk_data(car_id):
+            pass
+        else:
+            cls.sell_car(mail)
+
+    @classmethod
+    def chk_quantity(cls, car_id, customer_req, mail):
+        conn = sqlite3.connect('Store.db')
+        cur = conn.cursor()
+        customer_req = input("Enter the car name: ")
+        cur.execute("SELECT name FROM cars WHERE car_id=?", (car_id,))
+        result = cur.fetchone()
+
+        if result is None:
+            return "Car not found."
+        car_name = result[1]
+        if car_name == customer_req:
+            print("\nCar is available: {}".format(car_name))
+            print("Please Enter that is available......!\n")
+            return False
+        else:
+            cls.remove_data(customer_req, car_id, mail)
+    @classmethod
+    def remove_data(cls, car_id, customer_req, mail):
+        conn = sqlite3.connect('inventory.db')
+        cur = conn.cursor()
+        print(mail)
+        cur.execute("UPDATE cars SET name=? WHERE car_id = ?", (customer_req, car_id))
+        cur.execute("SELECT price FROM cars WHERE car_id=?", (car_id,))
+        num = cur.fetchone()
+        one = num[1]
+        print(one)
+        total_price = one * customer_req
+        print(total_price)
+        cur.execute("SELECT car_id,name FROM cars WHERE car_id=?", (car_id,))
+        data2 = cur.fetchone()
+        car_id = data2[0]
+        print(car_id)
+        name = data2[1]
+        print(name)
+        print(data2)
+        cur.execute("SELECT user_id,user_email FROM users WHERE user_email=?", (mail,))
+        data3 = cur.fetchone()
+        user_id = data3[0]
+        print(user_id)
+        user_email = data3[1]
+        print(user_email)
+        print(data3)
+        car_details = customer_req
+        date_time = datetime.now()
+        cur.execute('''
+                    CREATE TABLE IF NOT EXISTS sales (
+                    record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        car_id TEXT,
+                        name TEXT,
+                        user_id TEXT,
+                        user_email TEXT,
+                        car_details TEXT,
+                        total_price TEXT,
+                        date_time TIMESTAMP
+                        )''')
+        cur.execute("INSERT INTO sales(car_id,name,user_id,user_email,car_details,total_price,date_time)VALUES(?,?,?,"
+                    "?,?,?,?)", (car_id, name, user_id, user_email, car_details, total_price, date_time))
+        conn.commit()
+        cls.show_data()
+        conn.close()
+class User:
+    @classmethod
+    def user_type(cls):
+        import sqlite3
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+                        CREATE TABLE IF NOT EXISTS users(
+                        user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_role TEXT NOT NULL,
+                        user_email TEXT NOT NULL,
+                        time_date TIMESTAMP)''')
+        user_email = input("Enter your email address: ")
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE user_email=?", (user_email,))
+        result = cursor.fetchone()
+        if result is None:
+            return cls.add_user(user_email)
+        mail = result[2]
+        if result:
+            user_role = result[1]
+            if user_role == "customer":
+                print("Customer")
+                return Customer.choice(mail)
+            elif user_role == "owner":
+                return Buyer.owner(mail)
+        else:
+
+            print("Email not found.........!\nMention your role to add your email: ")
+            user_role = input("Enter your Type (customer/owner): ")
+            if user_role.lower() == "customer":
+                cursor.execute("INSERT INTO users (user_email, user_role) VALUES (?, ?)", (user_email, "customer"))
+                print("New Customer has been added....!")
+            elif user_role.lower() == "owner":
+                cursor.execute("INSERT INTO users (user_email, user_role) VALUES (?, ?)", (user_email, "owner"))
+                print("New Owner has been added.......!")
+            else:
+                print("Invalid role.")
+        conn.commit()
+        conn.close()
+    @classmethod
+    def add_user(cls, user_email):
+        time_date = datetime.now()
+        conn = sqlite3.connect('inventory.db')
+        cursor = conn.cursor()
+        print("Email not found\n Mention your role to add your email:")
+        user_role = input("Enter your type\n--customer\n--owner\nEnter:")
+        if user_role.lower() == "customer":
+            cursor.execute("INSERT INTO users (user_email, user_role, time_date) VALUES (?, ?, ?)",
+                           (user_email, "customer", time_date))
+            print("New Customer has been added....!")
+        elif user_role.lower() == "owner":
+            cursor.execute("INSERT INTO users (user_email, user_role, time_date) VALUES (?, ?, ?)",
+                           (user_email, "owner", time_date))
+            print("New Owner has been added.......!")
+        else:
+            print("Invalid role.")
+        conn.commit()
+        conn.close()
 
 def main():
-    usertype = ''
-    try:
-        usertype = int(input("WELCOME TO ELITE MOTORS\n1.owner\n2.buyer\nEnter Please:"))
-    except:
-        print("invalid input only numeric value  is allowed")
-        main()
-    if usertype == 1:
-        return vehicle_inventory.instantiate_from_csv()
-
-    elif usertype == 2:
-        return elite_motors_buyer.instantiate_from_csv()
-
-    else:
-        print("invalid input only numeric value 1 and 2 is allowed")
-        main()
-
+    user = User()
+    user.user_type()
 
 main()
